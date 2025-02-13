@@ -1,2 +1,4 @@
 venv/
 gitignored/
+
+__pycache__/

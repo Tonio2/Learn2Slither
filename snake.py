@@ -2,21 +2,17 @@ import random
 
 BOARD_SIZE = 10
 
-LEFT_CMD = -1
-RIGHT_CMD = 1
-
 UP = (-1, 0)
 DOWN = (1, 0)
 LEFT = (0, -1)
 RIGHT = (0, 1)
 
-DIRS = [UP,RIGHT,DOWN,LEFT]
 
 class Snake:
     def __init__(self, board_size=BOARD_SIZE, initial_length=3):
         self.board_size = board_size
         self.positions = [(0, i) for i in range(initial_length)]
-        self.dir_idx = 3
+        self.dir = DOWN
 
         self.free_positions = set(
             (x, y) for x in range(self.board_size) for y in range(self.board_size)
@@ -34,7 +30,7 @@ class Snake:
     def _get_free_random_position(self):
         if not self.free_positions:
             return None
-        return random.choice(self.free_positions)
+        return random.choice(list(self.free_positions))
 
     def _place_apples(self, count, color):
         for _ in range(count):
@@ -47,9 +43,25 @@ class Snake:
 
                 self.free_positions.remove(pos)
 
-    def change_direction(self, command):
-        # command should be LEFT_CMD or RIGHT_CMD
-        self.dir_idx = (self.dir_idx + command) % 4
+    def set_dir(self, command):
+        if command != (-self.dir[0], -self.dir[1]):
+            self.dir = command
+
+    def turn(self, dir):
+        if dir == "left":
+            self.dir = {
+                UP: LEFT,
+                LEFT: DOWN,
+                DOWN: RIGHT,
+                RIGHT: UP,
+            }[self.dir]
+        elif dir == "right":
+            self.dir = {
+                UP: RIGHT,
+                RIGHT: DOWN,
+                DOWN: LEFT,
+                LEFT: UP,
+            }[self.dir]
 
     def _pop_tail(self):
         tail = self.positions.pop()
@@ -57,11 +69,11 @@ class Snake:
 
     def _insert_head(self, head):
         self.positions.insert(0, head)
-        self.free_positions.remove(head)
+        self.free_positions.discard(head)
 
     def move(self):
         head_x, head_y = self.positions[0]
-        new_head = (head_x + DIRS[self.dir_idx][0], head_y + DIRS[self.dir_idx][1])
+        new_head = (head_x + self.dir[0], head_y + self.dir[1])
         scenari = "default"
 
         if (
@@ -69,6 +81,10 @@ class Snake:
             or new_head[0] < 0 or new_head[0] >= self.board_size
             or new_head[1] < 0 or new_head[1] >= self.board_size
         ):
+            print("Eats its tail: ", new_head in self.positions)
+            print("Eats wall north or sud: ", new_head[0] < 0 or new_head[0] >= self.board_size)
+            print("Eats wall west or east: ", new_head[1] < 0 or new_head[1] >= self.board_size)
+            print("Collision detected")
             return False # Collision detected
 
         if new_head in self.green_apple_positions:
