@@ -83,7 +83,7 @@ def main():
             if direction is not None:
                 snake.turn(direction)
 
-        if not snake.move():
+        if not snake.move()[0]:
             print("Game Over")
             running = False  # Game over on collision
 

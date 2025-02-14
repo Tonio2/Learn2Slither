@@ -2,10 +2,20 @@ import random
 
 BOARD_SIZE = 10
 
-UP = (-1, 0)
-DOWN = (1, 0)
-LEFT = (0, -1)
-RIGHT = (0, 1)
+UP = 0
+RIGHT = 1
+DOWN = 2
+LEFT = 3
+
+DIRECTIONS = [(-1, 0), (0, 1), (1, 0), (0, -1)]
+
+# Precomputed turn mappings (tuples are faster than dicts)
+TURN_LEFT = [LEFT, DOWN, RIGHT, UP]
+TURN_RIGHT = [RIGHT, UP, LEFT, DOWN]
+
+def direction_after_turn(dir, turn):
+    index = TURN_LEFT[dir] if turn == "left" else TURN_RIGHT[dir]
+    return index
 
 
 class Snake:
@@ -44,24 +54,11 @@ class Snake:
                 self.free_positions.remove(pos)
 
     def set_dir(self, command):
-        if command != (-self.dir[0], -self.dir[1]):
+        if DIRECTIONS[command] != (-DIRECTIONS[self.dir][0], -DIRECTIONS[self.dir][1]):
             self.dir = command
 
     def turn(self, dir):
-        if dir == "left":
-            self.dir = {
-                UP: LEFT,
-                LEFT: DOWN,
-                DOWN: RIGHT,
-                RIGHT: UP,
-            }[self.dir]
-        elif dir == "right":
-            self.dir = {
-                UP: RIGHT,
-                RIGHT: DOWN,
-                DOWN: LEFT,
-                LEFT: UP,
-            }[self.dir]
+        self.dir = direction_after_turn(self.dir, dir)
 
     def _pop_tail(self):
         tail = self.positions.pop()
@@ -73,7 +70,7 @@ class Snake:
 
     def move(self):
         head_x, head_y = self.positions[0]
-        new_head = (head_x + self.dir[0], head_y + self.dir[1])
+        new_head = (head_x + DIRECTIONS[self.dir][0], head_y + DIRECTIONS[self.dir][1])
         scenari = "default"
 
         if (
@@ -81,11 +78,13 @@ class Snake:
             or new_head[0] < 0 or new_head[0] >= self.board_size
             or new_head[1] < 0 or new_head[1] >= self.board_size
         ):
-            print("Eats its tail: ", new_head in self.positions)
-            print("Eats wall north or sud: ", new_head[0] < 0 or new_head[0] >= self.board_size)
-            print("Eats wall west or east: ", new_head[1] < 0 or new_head[1] >= self.board_size)
-            print("Collision detected")
-            return False # Collision detected
+            if new_head in self.positions:
+                print("Eats its tail")
+            elif new_head[0] < 0 or new_head[0] >= self.board_size:
+                print("Eats wall north or sud")
+            elif new_head[1] < 0 or new_head[1] >= self.board_size:
+                print("Eats wall west or east")
+            return False, scenari # Collision detected
 
         if new_head in self.green_apple_positions:
             scenari = "green"
@@ -101,7 +100,8 @@ class Snake:
                 self._pop_tail()
                 self._pop_tail()
             else:
-                return False
+                print("Eats red apple but not enough length")
+                return False, scenari
 
         # Update apples
         if scenari == "green":
@@ -111,10 +111,13 @@ class Snake:
             self.red_apple_positions.remove(new_head)
             self._place_apples(1, "red")
 
-        return True
+        return True, scenari
 
     def get_positions(self):
         return self.positions
 
     def get_head_position(self):
         return self.positions[0]
+
+    def get_score(self):
+        return len(self.positions) - 3
