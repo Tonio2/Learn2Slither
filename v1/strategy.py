@@ -110,3 +110,10 @@ NSTATES = 224  # 8 (Danger) * 4 (Red Apple) * 7 (Green Apple)
 n_actions = 3  # Left, Right, Forward
 
 Q_table = np.zeros((NSTATES, n_actions))
+
+
+# Encore bcp de comportements randoms
+# Le serpent devrait manger la pomme car il y a une pomme à côté et pas de mur mais il ne le fait pas
+# Problème quand mur en face, pomme à droite mais mauvaise idée de manger la pomme car après serpent coincé
+# Dans ce cas, il faudrait choisir le mur le plus éloigné pour prioriser la survie car il ne peut pas savoir qu'il va se retrouver coindé à priori
+

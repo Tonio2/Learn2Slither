@@ -28,7 +28,7 @@ epsilon_decay = 0.99  # Réduction d'epsilon après chaque épisode
 num_episodes = 100 # Nombre d'épisodes d'entraînement
 
 n_actions = 3  # 3 actions possibles
-mode = "no_ui" # "ui" or "no_ui"
+mode = "ui" # "ui" or "no_ui"
 
 if mode == "ui":
     ui = UI()
@@ -40,6 +40,10 @@ def game(Q_table, epsilon):
     while not done:
         if mode == "ui":
             ui.render(snake)
+            events = ui.get_events()
+            if "quit" in events:
+                ui.quit()
+                return Q_table
 
         state = state_to_index(snake)
         action = choose_action(Q_table, state, epsilon)
