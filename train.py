@@ -35,9 +35,10 @@ if mode == "ui":
 
 def game(Q_table, epsilon):
     snake = Snake()
+    nmoves = 0
     done = False
 
-    while not done:
+    while not done and nmoves < 1000:
         if mode == "ui":
             ui.render(snake)
             events = ui.get_events()
@@ -52,8 +53,11 @@ def game(Q_table, epsilon):
 
         if not result:
             done = True
-            print("Score: ", snake.get_score())
 
+
+        nmoves += 1
+
+    print("Score: ", snake.get_score())
     return Q_table
 
 for episode in range(num_episodes):

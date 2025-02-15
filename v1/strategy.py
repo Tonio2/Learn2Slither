@@ -141,9 +141,9 @@ def update_Q_table(Q_table, state, action, res, scenari, snake, alpha=0.1, gamma
         reward = -500
     else:
         if scenari == "red":
-            reward = -30
+            reward = -80
         elif scenari == "green":
-            reward = 30
+            reward = 80
 
     if res == False:
         return alpha * (reward - Q_table[state][action])
