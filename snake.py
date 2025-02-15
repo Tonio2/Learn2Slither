@@ -10,8 +10,8 @@ LEFT = 3
 DIRECTIONS = [(-1, 0), (0, 1), (1, 0), (0, -1)]
 
 # Precomputed turn mappings (tuples are faster than dicts)
-TURN_LEFT = [LEFT, DOWN, RIGHT, UP]
-TURN_RIGHT = [RIGHT, UP, LEFT, DOWN]
+TURN_LEFT = [LEFT, UP, RIGHT, DOWN]
+TURN_RIGHT = [RIGHT, DOWN, LEFT, UP]
 
 def direction_after_turn(dir, turn):
     index = TURN_LEFT[dir] if turn == "left" else TURN_RIGHT[dir]

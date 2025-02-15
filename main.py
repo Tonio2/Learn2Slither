@@ -1,7 +1,8 @@
 import os
 import numpy as np
-from snake import Snake, UP, DOWN, LEFT, RIGHT
+from snake import Snake
 from snakeUI import UI
+from v1.strategy import print_Q_table_entry
 
 ui = UI()
 
@@ -29,7 +30,11 @@ def main():
     direction = None
 
     while running:
-        ui.render(snake)
+        ui.render(snake, snake.get_score())
+
+        print("==================")
+        state = state_to_index(snake)
+        print_Q_table_entry(q_table, state)
 
         events = ui.get_events()
         if "quit" in events:
@@ -39,9 +44,10 @@ def main():
             direction = events["direction"]
             if (direction != None):
                 snake.set_dir(direction)
+        if "speed" in events:
+            ui.set_speed(events["speed"])
 
         if mode == "ai":
-            state = state_to_index(snake)
             action = np.argmax(q_table[state])
             direction = ["left", "right", None][action]
             if direction:

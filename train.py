@@ -25,10 +25,10 @@ gamma = 0.9   # Facteur de discount
 alpha = 0.1   # Taux d'apprentissage
 epsilon = 1.0  # Probabilité d'exploration (commence élevée, diminue ensuite)
 epsilon_decay = 0.99  # Réduction d'epsilon après chaque épisode
-num_episodes = 100 # Nombre d'épisodes d'entraînement
+num_episodes = 10000 # Nombre d'épisodes d'entraînement
 
 n_actions = 3  # 3 actions possibles
-mode = "ui" # "ui" or "no_ui"
+mode = "no_ui" # "ui" or "no_ui"
 
 if mode == "ui":
     ui = UI()
@@ -52,7 +52,7 @@ def game(Q_table, epsilon):
 
         if not result:
             done = True
-            print_Q_table(Q_table)
+            print("Score: ", snake.get_score())
 
     return Q_table
 
