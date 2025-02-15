@@ -30,7 +30,7 @@ def main():
     direction = None
 
     while running:
-        ui.render(snake, snake.get_score())
+        ui.render(snake)
 
         print("==================")
         state = state_to_index(snake)

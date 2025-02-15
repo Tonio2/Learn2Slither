@@ -43,12 +43,12 @@ class UI:
         self.screen.blit(score_text, (10, SCREEN_SIZE + 5))
         self.screen.blit(speed_text, (150, SCREEN_SIZE + 5))
 
-    def render(self, snake, score):
+    def render(self, snake):
         self.clock.tick(self.max_fps)
         self.screen.fill(BLACK)
         self._draw_apples(snake)
         self._draw_snake(snake)
-        self._draw_ui(score)  # Draw UI elements
+        self._draw_ui(snake.get_score())  # Draw UI elements
         pygame.display.flip()
 
     def get_events(self):

@@ -78,12 +78,6 @@ class Snake:
             or new_head[0] < 0 or new_head[0] >= self.board_size
             or new_head[1] < 0 or new_head[1] >= self.board_size
         ):
-            if new_head in self.positions:
-                print("Eats its tail")
-            elif new_head[0] < 0 or new_head[0] >= self.board_size:
-                print("Eats wall north or sud")
-            elif new_head[1] < 0 or new_head[1] >= self.board_size:
-                print("Eats wall west or east")
             return False, scenari # Collision detected
 
         if new_head in self.green_apple_positions:
