@@ -21,7 +21,7 @@ def direction_after_turn(dir, turn):
 class Snake:
     def __init__(self, board_size=BOARD_SIZE, initial_length=3):
         self.board_size = board_size
-        self.positions = [(0, i) for i in range(initial_length)]
+        self.positions = [(i, 4) for i in range(3, 3 + initial_length)]
         self.dir = DOWN
 
         self.free_positions = set(
