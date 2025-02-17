@@ -1,3 +1,4 @@
+import json
 import random
 
 BOARD_SIZE = 10
@@ -19,7 +20,7 @@ def direction_after_turn(dir, turn):
 
 # First coordinate is the row, second is the column
 class Snake:
-    def __init__(self, board_size=BOARD_SIZE, initial_length=3):
+    def __init__(self, board_size=BOARD_SIZE, initial_length=3, state=None):
         self.board_size = board_size
         self.positions = [(i, 4) for i in range(3 + initial_length, 3, -1)]
         self.dir = DOWN
@@ -32,9 +33,29 @@ class Snake:
         self.green_apple_positions = set()
         self.red_apple_positions = set()
 
+        self.history = []
+
         self._place_apples(2, "green")
         self._place_apples(1, "red")
+        self._save_state()
 
+        if state:
+            self._load_state(state)
+
+    def _load_state(self, state):
+        self.positions = state["positions"]
+        self.dir = state["dir"]
+        self.green_apple_positions = set((pos[0], pos[1]) for pos in state["green_apples"])
+        self.red_apple_positions = set((pos[0], pos[1]) for pos in state["red_apples"])
+
+    def _save_state(self):
+        state = {
+            "positions": self.positions[:],
+            "dir": self.dir,
+            "green_apples": list(self.green_apple_positions),
+            "red_apples": list(self.red_apple_positions),
+        }
+        self.history.append(state)
 
 
     def _get_free_random_position(self):
@@ -58,7 +79,7 @@ class Snake:
             self.dir = command
 
     def turn(self, dir):
-        self.dir = direction_after_turn(self.dir, dir)
+        self.set_dir(direction_after_turn(self.dir, dir))
 
     def _pop_tail(self):
         tail = self.positions.pop()
@@ -68,16 +89,20 @@ class Snake:
         self.positions.insert(0, head)
         self.free_positions.discard(head)
 
-    def move(self):
+    def _make_move(self):
         head_x, head_y = self.positions[0]
         new_head = (head_x + DIRECTIONS[self.dir][0], head_y + DIRECTIONS[self.dir][1])
         scenari = "default"
+
+        print("New head:", new_head)
 
         if (
             new_head in self.positions
             or new_head[0] < 0 or new_head[0] >= self.board_size
             or new_head[1] < 0 or new_head[1] >= self.board_size
         ):
+            print("Eats its body: ", new_head in self.positions)
+            print("Hits wall: ", new_head[0] < 0 or new_head[0] >= self.board_size or new_head[1] < 0 or new_head[1] >= self.board_size)
             return False, scenari # Collision detected
 
         if new_head in self.green_apple_positions:
@@ -107,6 +132,12 @@ class Snake:
 
         return True, scenari
 
+    def move(self):
+        res, scenari = self._make_move()
+        print("Move:", self.dir, "Result:", res, "Scenari:", scenari)
+        self._save_state()
+        return res, scenari
+
     def get_positions(self):
         return self.positions
 
@@ -115,3 +146,7 @@ class Snake:
 
     def get_score(self):
         return len(self.positions) - 3
+
+    def save_game(self):
+        with open("game_history.json", "w") as f:
+            json.dump(self.history, f)

@@ -15,14 +15,14 @@ BLACK = (0, 0, 0)
 GRAY = (50, 50, 50)  # Background for UI bar
 
 class UI:
-    def __init__(self):
+    def __init__(self, turn_based = False):
         pygame.init()
         self.screen = pygame.display.set_mode((SCREEN_SIZE, TOTAL_HEIGHT))
         pygame.display.set_caption("Snake Game")
         self.font = pygame.font.Font(None, 36)
         self.clock = pygame.time.Clock()
         self.max_fps = 5
-        self.turn_based = True
+        self.turn_based = turn_based
 
     def _draw_apples(self, snake):
         for apple in snake.green_apple_positions:
@@ -44,12 +44,12 @@ class UI:
         self.screen.blit(speed_text, (150, SCREEN_SIZE + 5))
 
     def render(self, snake):
-        self.clock.tick(self.max_fps)
         self.screen.fill(BLACK)
         self._draw_apples(snake)
         self._draw_snake(snake)
         self._draw_ui(snake.get_score())  # Draw UI elements
         pygame.display.flip()
+        self.clock.tick(self.max_fps)
 
     def get_events(self):
         events =  {}
@@ -61,6 +61,10 @@ class UI:
                         return events
                     if event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_RIGHT:
+                            events["step"] = 0
+                            return events
+                        if event.key == pygame.K_LEFT:
+                            events["step"] = -2
                             return events
                         if event.key == pygame.K_SPACE:
                             events["speed"] = "pause"
@@ -145,3 +149,34 @@ class UI:
                         return "player", None
                     elif event.key == pygame.K_2:
                         return "ai", self.select_ai_model(models)
+
+    def game_over_screen(self, snake):
+
+        selected = 0
+        while True:
+            self.screen.fill(BLACK)
+            title = self.font.render("GAME OVER", True, WHITE)
+            self.screen.blit(title, (SCREEN_SIZE // 4, SCREEN_SIZE // 6))
+
+            score_text = self.font.render(f"Score: {snake.get_score()}", True, WHITE)
+            self.screen.blit(score_text, (SCREEN_SIZE // 4, SCREEN_SIZE // 6 + 40))
+
+            options = ["Play Again", "Main Menu", "Quit"]
+            for i, option in enumerate(options):
+                color = GREEN if i == selected else WHITE
+                text = self.font.render(f"> {option} " if i == selected else option, True, color)
+                self.screen.blit(text, (SCREEN_SIZE // 4, SCREEN_SIZE // 6 + 120 + i * 40))
+
+            pygame.display.flip()
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_UP and selected > 0:
+                        selected -= 1
+                    elif event.key == pygame.K_DOWN and selected < len(options) - 1:
+                        selected += 1
+                    elif event.key == pygame.K_RETURN:
+                        return options[selected]
