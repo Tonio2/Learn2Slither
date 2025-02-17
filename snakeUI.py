@@ -1,6 +1,8 @@
 import pygame
 from snake import UP, DOWN, LEFT, RIGHT
 
+QUIT = 5
+
 # Constants
 SCREEN_SIZE = 400
 UI_HEIGHT = 50
@@ -49,43 +51,51 @@ class UI:
         self._draw_snake(snake)
         self._draw_ui(snake.get_score())  # Draw UI elements
         pygame.display.flip()
-        self.clock.tick(self.max_fps)
+        self.clock.tick(1000 if self.turn_based else self.max_fps)
 
-    def get_events(self):
-        events =  {}
+    def get_player_input(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return QUIT
+
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:
+                    return UP
+                elif event.key == pygame.K_DOWN:
+                    return DOWN
+                elif event.key == pygame.K_LEFT:
+                    return LEFT
+                elif event.key == pygame.K_RIGHT:
+                    return RIGHT
+
+        return None
+
+    def get_spectator_input(self):
         if self.turn_based:
             while True:
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
-                        events["quit"] = True
-                        return events
+                        return "quit", 0
                     if event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_RIGHT:
-                            events["step"] = 0
-                            return events
+                            return None, 0
                         if event.key == pygame.K_LEFT:
-                            events["step"] = -2
-                            return events
+                            return "step", -2
                         if event.key == pygame.K_SPACE:
-                            events["speed"] = "pause"
-                            return events
+                            self.turn_based = not self.turn_based
+                            return None, 0
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                events["quit"] = True
+                return "quit", 0
             if event.type == pygame.KEYDOWN:
-                events["direction"] = {
-                    pygame.K_UP: UP,
-                    pygame.K_DOWN: DOWN,
-                    pygame.K_LEFT: LEFT,
-                    pygame.K_RIGHT: RIGHT,
-                }.get(event.key, None)
-                events["speed"] = {
-                    pygame.K_LEFT: "slower",
-                    pygame.K_RIGHT: "faster",
-                    pygame.K_SPACE: "pause",
-                }.get(event.key, None)
-        return events
+                if event.key == pygame.K_SPACE:
+                    self.turn_based = not self.turn_based
+                if event.key == pygame.K_RIGHT:
+                    self.max_fps += 1
+                if event.key == pygame.K_LEFT:
+                    self.max_fps = max(1, self.max_fps - 1)
+        return None, 0
 
     def quit(self):
         pygame.quit()
@@ -150,7 +160,7 @@ class UI:
                     elif event.key == pygame.K_2:
                         return "ai", self.select_ai_model(models)
 
-    def game_over_screen(self, snake):
+    def game_over_screen(self, score):
 
         selected = 0
         while True:
@@ -158,10 +168,10 @@ class UI:
             title = self.font.render("GAME OVER", True, WHITE)
             self.screen.blit(title, (SCREEN_SIZE // 4, SCREEN_SIZE // 6))
 
-            score_text = self.font.render(f"Score: {snake.get_score()}", True, WHITE)
+            score_text = self.font.render(f"Score: {score}", True, WHITE)
             self.screen.blit(score_text, (SCREEN_SIZE // 4, SCREEN_SIZE // 6 + 40))
 
-            options = ["Play Again", "Main Menu", "Quit"]
+            options = ["Play Again", "Quit"]
             for i, option in enumerate(options):
                 color = GREEN if i == selected else WHITE
                 text = self.font.render(f"> {option} " if i == selected else option, True, color)

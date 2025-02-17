@@ -94,15 +94,15 @@ class Snake:
         new_head = (head_x + DIRECTIONS[self.dir][0], head_y + DIRECTIONS[self.dir][1])
         scenari = "default"
 
-        print("New head:", new_head)
+        # print("New head:", new_head)
 
         if (
             new_head in self.positions
             or new_head[0] < 0 or new_head[0] >= self.board_size
             or new_head[1] < 0 or new_head[1] >= self.board_size
         ):
-            print("Eats its body: ", new_head in self.positions)
-            print("Hits wall: ", new_head[0] < 0 or new_head[0] >= self.board_size or new_head[1] < 0 or new_head[1] >= self.board_size)
+            # print("Eats its body: ", new_head in self.positions)
+            # print("Hits wall: ", new_head[0] < 0 or new_head[0] >= self.board_size or new_head[1] < 0 or new_head[1] >= self.board_size)
             return False, scenari # Collision detected
 
         if new_head in self.green_apple_positions:
@@ -134,7 +134,7 @@ class Snake:
 
     def move(self):
         res, scenari = self._make_move()
-        print("Move:", self.dir, "Result:", res, "Scenari:", scenari)
+        # print("Move:", self.dir, "Result:", res, "Scenari:", scenari)
         self._save_state()
         return res, scenari
 
@@ -147,6 +147,6 @@ class Snake:
     def get_score(self):
         return len(self.positions) - 3
 
-    def save_game(self):
-        with open("game_history.json", "w") as f:
+    def save_game(self, filename="game_history.json"):
+        with open(filename, "w") as f:
             json.dump(self.history, f)
