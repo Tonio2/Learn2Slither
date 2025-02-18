@@ -1,4 +1,5 @@
 import pygame
+import pygame.gfxdraw
 from snake import UP, DOWN, LEFT, RIGHT
 
 QUIT = 5
@@ -7,51 +8,155 @@ QUIT = 5
 SCREEN_SIZE = 400
 UI_HEIGHT = 50
 TOTAL_HEIGHT = SCREEN_SIZE + UI_HEIGHT
-
-
 CELL_SIZE = SCREEN_SIZE // 10
+
+# Colors
 WHITE = (255, 255, 255)
-GREEN = (0, 255, 0)
-RED = (255, 0, 0)
+SNAKE_GREEN = (0, 255, 0)       # Bright retro-green for snake
+APPLE_GREEN = (0, 200, 0)
+APPLE_RED = (200, 50, 50)
 BLACK = (0, 0, 0)
-GRAY = (50, 50, 50)  # Background for UI bar
+DARK_BG = (20, 20, 40)          # Dark bluish background
+NAVBAR_BG = (35,48,83)        # Slightly lighter dark background for the navbar
+GRID_DARK = (46,59,93)        # Dark cell color
+GRID_LIGHT = (57,69,107)      # Light cell color for checker pattern
+FONT = (109,124,174)
 
 class UI:
-    def __init__(self, turn_based = False):
+    def __init__(self, turn_based=False):
         pygame.init()
         self.screen = pygame.display.set_mode((SCREEN_SIZE, TOTAL_HEIGHT))
-        pygame.display.set_caption("Snake Game")
+        pygame.display.set_caption("🐍 Snake Game")
         self.font = pygame.font.Font(None, 36)
         self.clock = pygame.time.Clock()
         self.max_fps = 5
         self.turn_based = turn_based
 
+    def _draw_grid_background(self):
+        """
+        Draws a checkerboard-style grid in the game area
+        (below the navbar).
+        """
+        # The game board starts at y = UI_HEIGHT
+        for row in range(10):
+            for col in range(10):
+                # Each cell is CELL_SIZE x CELL_SIZE
+                rect = pygame.Rect(
+                    col * CELL_SIZE,
+                    row * CELL_SIZE + UI_HEIGHT,  # offset by navbar height
+                    CELL_SIZE,
+                    CELL_SIZE
+                )
+                if (row + col) % 2 == 0:
+                    color = GRID_DARK
+                else:
+                    color = GRID_LIGHT
+                pygame.draw.rect(self.screen, color, rect)
+
+    def _draw_navbar(self, score):
+        """
+        Draws the top navbar with Score and Speed.
+        """
+        navbar_rect = pygame.Rect(0, 0, SCREEN_SIZE, UI_HEIGHT)
+        pygame.draw.rect(self.screen, NAVBAR_BG, navbar_rect)
+
+        score_text = self.font.render(f"SCORE: {score}", True, FONT)
+        if self.turn_based:
+            speed_str = "0 FPS"
+        else:
+            speed_str = f"{self.max_fps} FPS"
+        speed_text = self.font.render(f"SPEED: {speed_str}", True, FONT)
+
+        # Position them inside the navbar
+        self.screen.blit(score_text, (15, 14))
+        self.screen.blit(speed_text, (220, 14))
+
     def _draw_apples(self, snake):
+        if not hasattr(self, 'green_apple_img'):
+            self.green_apple_img = pygame.image.load("img/green_apple.png")
+            self.green_apple_img = pygame.transform.scale(self.green_apple_img, (CELL_SIZE, CELL_SIZE))
+
+        if not hasattr(self, 'red_apple_img'):
+            self.red_apple_img = pygame.image.load("img/red_apple.png")
+            self.red_apple_img = pygame.transform.scale(self.red_apple_img, (CELL_SIZE, CELL_SIZE))
+
         for apple in snake.green_apple_positions:
-            pygame.draw.rect(self.screen, GREEN, (apple[1] * CELL_SIZE, apple[0] * CELL_SIZE, CELL_SIZE, CELL_SIZE))
+            x = apple[1] * CELL_SIZE
+            y = apple[0] * CELL_SIZE + UI_HEIGHT
+            self.screen.blit(self.green_apple_img, (x, y))
+
         for apple in snake.red_apple_positions:
-            pygame.draw.rect(self.screen, RED, (apple[1] * CELL_SIZE, apple[0] * CELL_SIZE, CELL_SIZE, CELL_SIZE))
+            x = apple[1] * CELL_SIZE
+            y = apple[0] * CELL_SIZE + UI_HEIGHT
+            self.screen.blit(self.red_apple_img, (x, y))
+
 
     def _draw_snake(self, snake):
-        for pos in snake.get_positions():
-            pygame.draw.rect(self.screen, WHITE, (pos[1] * CELL_SIZE, pos[0] * CELL_SIZE, CELL_SIZE, CELL_SIZE))
+        """
+        Draws the snake. The head has small eyes.
+        """
+        positions = snake.get_positions()
+        if not positions:
+            return
 
-    def _draw_ui(self, score):
-        pygame.draw.rect(self.screen, GRAY, (0, SCREEN_SIZE, SCREEN_SIZE, UI_HEIGHT))  # UI bar background
+        # Draw head separately so we can give it eyes
+        head = positions[0]
+        head_rect = pygame.Rect(
+            head[1] * CELL_SIZE,
+            head[0] * CELL_SIZE + UI_HEIGHT,
+            CELL_SIZE,
+            CELL_SIZE
+        )
+        pygame.draw.rect(self.screen, SNAKE_GREEN, head_rect)
 
-        score_text = self.font.render(f"Score: {score}", True, WHITE)
-        speed_text = self.font.render(f"Speed: {'Turn-Based' if self.turn_based else f'{self.max_fps} FPS'}", True, WHITE)
+        # Determine snake direction for eye placement
+        direction = snake.dir
+        eye_radius = 2
+        head_x = head_rect.x
+        head_y = head_rect.y
 
-        self.screen.blit(score_text, (10, SCREEN_SIZE + 5))
-        self.screen.blit(speed_text, (150, SCREEN_SIZE + 5))
+        # Default eye positions (if facing right)
+        left_eye_center = (head_x + CELL_SIZE // 4, head_y + CELL_SIZE // 4)
+        right_eye_center = (head_x + 3 * CELL_SIZE // 4, head_y + CELL_SIZE // 4)
+
+        if direction == DOWN:
+            left_eye_center  = (head_x + CELL_SIZE // 4, head_y + 3 * CELL_SIZE // 4)
+            right_eye_center = (head_x + 3 * CELL_SIZE // 4, head_y + 3 * CELL_SIZE // 4)
+        elif direction == LEFT:
+            left_eye_center  = (head_x + CELL_SIZE // 4, head_y + CELL_SIZE // 4)
+            right_eye_center = (head_x + CELL_SIZE // 4, head_y + 3 * CELL_SIZE // 4)
+        elif direction == RIGHT:
+            left_eye_center  = (head_x + 3 * CELL_SIZE // 4, head_y + CELL_SIZE // 4)
+            right_eye_center = (head_x + 3 * CELL_SIZE // 4, head_y + 3 * CELL_SIZE // 4)
+
+        # Draw eyes (small black circles)
+        pygame.gfxdraw.filled_circle(self.screen, left_eye_center[0], left_eye_center[1], eye_radius, BLACK)
+        pygame.gfxdraw.filled_circle(self.screen, right_eye_center[0], right_eye_center[1], eye_radius, BLACK)
+
+        # Draw the rest of the body
+        for pos in positions[1:]:
+            rect = pygame.Rect(
+                pos[1] * CELL_SIZE,
+                pos[0] * CELL_SIZE + UI_HEIGHT,
+                CELL_SIZE,
+                CELL_SIZE
+            )
+            pygame.draw.rect(self.screen, SNAKE_GREEN, rect)
 
     def render(self, snake):
-        self.screen.fill(BLACK)
+        # 1) Draw the top navbar
+        self._draw_navbar(snake.get_score())
+
+        # 2) Draw the checkerboard background for the game area
+        self._draw_grid_background()
+
+        # 3) Draw apples and snake
         self._draw_apples(snake)
         self._draw_snake(snake)
-        self._draw_ui(snake.get_score())  # Draw UI elements
+
         pygame.display.flip()
         self.clock.tick(1000 if self.turn_based else self.max_fps)
+
 
     def get_player_input(self):
         for event in pygame.event.get():
