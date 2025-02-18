@@ -1,19 +1,21 @@
 from snake import direction_after_turn, DIRECTIONS, UP, DOWN, LEFT, RIGHT
 import numpy as np
+from logger import logger as logging
+
 
 def _compute_danger(snake):
     head = snake.positions[0]
     x, y = head
     dirs = [direction_after_turn(snake.dir, "left"), direction_after_turn(snake.dir, "right"), snake.dir]
-    # print("Dirs:", dirs)
+    logging.debug("Dirs: {dirs}")
     tiles = [(x + DIRECTIONS[dir][0], y + DIRECTIONS[dir][1]) for dir in dirs]
-    # print("Tiles:", tiles)
+    logging.debug(f"Tiles: {tiles}")
     dangers = [0, 0, 0]
     for i, tile in enumerate(tiles):
         if tile in snake.positions or tile[0] < 0 or tile[0] >= snake.board_size or tile[1] < 0 or tile[1] >= snake.board_size:
             dangers[i] = 1
 
-    # print("Dangers: ", dangers)
+    logging.debug(f"Dangers: {dangers}")
 
     state_index = sum([val * (2**i) for i, val in enumerate(dangers)])
     return state_index
@@ -31,8 +33,8 @@ def _compute_red_apple(snake):
 
     tiles = [(head[0] + DIRECTIONS[d][0], head[1] + DIRECTIONS[d][1]) for d in directions]
 
-    # print("Red apple:", red_apple)
-    # print("Tiles:", tiles)
+    logging.debug(f"Red apple: {red_apple}")
+    logging.debug(f"Tiles: {tiles}")
     if red_apple == tiles[0]:  # Left
         return 1
     elif red_apple == tiles[1]:  # Right
@@ -47,11 +49,11 @@ def _compute_green_apple(snake):
     x, y = head
     possible_states = [0] * 3  # [Left, Right, Center]
 
-    # print("Green apples:", snake.green_apple_positions)
+    logging.debug(f"Green apples: {snake.green_apple_positions}")
 
     for apple in snake.green_apple_positions:
         dx, dy = apple[0] - x, apple[1] - y
-        # print("Apple:", apple, "dx, dy:", dx, dy)
+        logging.debug(f"Apple: {apple} dx, dy: {dx, dy}")
 
         # Check if it's in line with the snake's movement
         if (dx == 0 and dy != 0) or (dx != 0 and dy == 0):
@@ -97,7 +99,7 @@ def _compute_green_apple(snake):
 
             if direction:
                 possible_states[["left", "right", "center"].index(direction)] = 1
-    # print("Possible states:", possible_states)
+    logging.debug(f"Possible states: {possible_states}")
 
     state_index = sum([val * (2**i) for i, val in enumerate(possible_states)])
 
@@ -109,7 +111,7 @@ def state_to_index(snake):
     red_apple = _compute_red_apple(snake)
     green_apple = _compute_green_apple(snake)
 
-    # print("State:", danger, red_apple, green_apple)
+    logging.debug(f"State: {danger}, {red_apple}, {green_apple}")
 
     return danger * (4 * 7) + red_apple * 7 + green_apple
 

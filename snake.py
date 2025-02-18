@@ -1,5 +1,6 @@
 import json
 import random
+from logger import logger as logging
 
 BOARD_SIZE = 10
 
@@ -36,7 +37,6 @@ class Snake:
             next_pos = self.next_pos(self.positions[0], self.dir)
             pos_ok = pos_ok and self.is_legal(next_pos)
 
-        print(self.positions)
 
         self.free_positions -= set(self.positions)
 
@@ -110,15 +110,15 @@ class Snake:
         new_head = self.next_pos((head_x, head_y), self.dir)
         scenari = "default"
 
-        # print("New head:", new_head)
+        logging.debug(f"New head: {new_head}")
 
         if (
             new_head in self.positions
             or new_head[0] < 0 or new_head[0] >= self.board_size
             or new_head[1] < 0 or new_head[1] >= self.board_size
         ):
-            # print("Eats its body: ", new_head in self.positions)
-            # print("Hits wall: ", new_head[0] < 0 or new_head[0] >= self.board_size or new_head[1] < 0 or new_head[1] >= self.board_size)
+            logging.debug(f"Eats its body: {new_head in self.positions}")
+            logging.debug(f"Hits wall: {new_head[0] < 0 or new_head[0] >= self.board_size or new_head[1] < 0 or new_head[1] >= self.board_size}")
             return False, scenari # Collision detected
 
         if new_head in self.green_apple_positions:
@@ -135,7 +135,7 @@ class Snake:
                 self._pop_tail()
                 self._pop_tail()
             else:
-                print("Eats red apple but not enough length")
+                logging.debug("Eats red apple but not enough length")
                 return False, scenari
 
         # Update apples
@@ -150,7 +150,7 @@ class Snake:
 
     def move(self):
         res, scenari = self._make_move()
-        # print("Move:", self.dir, "Result:", res, "Scenari:", scenari)
+        logging.debug(f'Move: {self.dir} Result: {res} Scenari: {scenari}')
         self._save_state()
         return res, scenari
 

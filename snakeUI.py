@@ -1,6 +1,8 @@
 import pygame
 import pygame.gfxdraw
 from snake import UP, DOWN, LEFT, RIGHT
+from logger import logger as logging
+
 
 # Constants
 SCREEN_SIZE = 400
@@ -211,7 +213,7 @@ class UI:
 
     def select_ai_model(self, models):
         if not models:
-            print("No AI models found! Defaulting to v0.")
+            logging.warning("No AI models found! Defaulting to v0.")
             return "v0"
 
         selected = 0

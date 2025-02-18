@@ -7,6 +7,8 @@ from importlib import import_module
 from snakeUI import UI
 from snake import Snake
 import shutil
+from logger import logger as logging
+
 
 def load(model_name, train=False):
     strategy_module = import_module(f"{model_name}.strategy")
@@ -90,7 +92,7 @@ def train(ui_flag, q_table, state_to_index, update_q_table):
 
             nmoves += 1
 
-        print("Episode", episode, "Score:", snake.get_score())
+        logging.info(f"Episode: {episode} Score: {snake.get_score()}")
         epsilon *= epsilon_decay
 
     if ui_flag:
@@ -136,13 +138,13 @@ def test(ui_flag, q_table, state_to_index, ngames, save):
 
             nmoves += 1
 
-        print("Episode", episode, "Score:", snake.get_score())
+        logging.info(f'Episode: {episode} Score: {snake.get_score()}')
         scores.append(snake.get_score())
 
         if save:
             snake.save_game(f"replays/game_{episode}.json")
 
-    print("Average score:", sum(scores) / ngames)
+    logging.info(f'Average score: , {sum(scores) / ngames}')
 
     if ui_flag:
         ui.quit()
@@ -174,7 +176,7 @@ def replay(ui_flag, filename):
         if h_idx < len(history):
             snake = Snake(state=history[h_idx])
         else:
-            print("Game Over")
+            logging.info("Game Over")
             running = False
 
     if ui_flag:
@@ -216,3 +218,4 @@ if __name__ == "__main__":
             train(not args.no_ui, q_table, state_to_index, update_q_table)
         if MODE == "test":
             test(not args.no_ui, q_table, state_to_index, args.games, args.save)
+
