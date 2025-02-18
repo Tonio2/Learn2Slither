@@ -33,7 +33,7 @@ def play():
 
             input = ui.get_player_input()
 
-            if input == 5:
+            if input == "quit":
                 ui.quit()
                 running = False
             elif input is not None:

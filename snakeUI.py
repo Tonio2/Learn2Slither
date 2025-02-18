@@ -2,8 +2,6 @@ import pygame
 import pygame.gfxdraw
 from snake import UP, DOWN, LEFT, RIGHT
 
-QUIT = 5
-
 # Constants
 SCREEN_SIZE = 400
 UI_HEIGHT = 50
@@ -13,8 +11,6 @@ CELL_SIZE = SCREEN_SIZE // 10
 # Colors
 WHITE = (255, 255, 255)
 SNAKE_GREEN = (0, 255, 0)       # Bright retro-green for snake
-APPLE_GREEN = (0, 200, 0)
-APPLE_RED = (200, 50, 50)
 BLACK = (0, 0, 0)
 DARK_BG = (20, 20, 40)          # Dark bluish background
 NAVBAR_BG = (35,48,83)        # Slightly lighter dark background for the navbar
@@ -161,7 +157,7 @@ class UI:
     def get_player_input(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                return QUIT
+                return "quit"
 
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
@@ -225,7 +221,7 @@ class UI:
             self.screen.blit(title, (SCREEN_SIZE // 4, SCREEN_SIZE // 6))
 
             for i, model in enumerate(models):
-                color = GREEN if i == selected else WHITE
+                color = SNAKE_GREEN if i == selected else WHITE
                 text = self.font.render(f"> {model} " if i == selected else model, True, color)
                 self.screen.blit(text, (SCREEN_SIZE // 4, SCREEN_SIZE // 3 + i * 40))
 
@@ -278,7 +274,7 @@ class UI:
 
             options = ["Play Again", "Quit"]
             for i, option in enumerate(options):
-                color = GREEN if i == selected else WHITE
+                color = SNAKE_GREEN if i == selected else WHITE
                 text = self.font.render(f"> {option} " if i == selected else option, True, color)
                 self.screen.blit(text, (SCREEN_SIZE // 4, SCREEN_SIZE // 6 + 120 + i * 40))
 

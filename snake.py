@@ -22,12 +22,22 @@ def direction_after_turn(dir, turn):
 class Snake:
     def __init__(self, board_size=BOARD_SIZE, initial_length=3, state=None):
         self.board_size = board_size
-        self.positions = [(i, 4) for i in range(3 + initial_length, 3, -1)]
-        self.dir = DOWN
 
         self.free_positions = set(
             (x, y) for x in range(self.board_size) for y in range(self.board_size)
         )
+
+        pos_ok = False
+        while not pos_ok:
+            pos = self._get_free_random_position()
+            self.dir = random.choice([UP, RIGHT, DOWN, LEFT])
+            self.positions = [(pos[0] - i * DIRECTIONS[self.dir][0], pos[1] - i * DIRECTIONS[self.dir][1]) for i in range(initial_length)]
+            pos_ok = all(self.is_legal(p) for p in self.positions)
+            next_pos = self.next_pos(self.positions[0], self.dir)
+            pos_ok = pos_ok and self.is_legal(next_pos)
+
+        print(self.positions)
+
         self.free_positions -= set(self.positions)
 
         self.green_apple_positions = set()
@@ -89,9 +99,15 @@ class Snake:
         self.positions.insert(0, head)
         self.free_positions.discard(head)
 
+    def next_pos(self, pos, dir):
+        return (pos[0] + DIRECTIONS[dir][0], pos[1] + DIRECTIONS[dir][1])
+
+    def is_legal(self, pos):
+        return pos[0] >= 0 and pos[0] < self.board_size and pos[1] >= 0 and pos[1] < self.board_size
+
     def _make_move(self):
         head_x, head_y = self.positions[0]
-        new_head = (head_x + DIRECTIONS[self.dir][0], head_y + DIRECTIONS[self.dir][1])
+        new_head = self.next_pos((head_x, head_y), self.dir)
         scenari = "default"
 
         # print("New head:", new_head)
