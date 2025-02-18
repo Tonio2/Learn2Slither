@@ -2,3 +2,5 @@ venv/
 gitignored/
 
 __pycache__/
+
+replays/
