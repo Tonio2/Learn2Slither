@@ -53,7 +53,7 @@ class Snake:
             self._load_state(state)
 
     def _load_state(self, state):
-        self.positions = state["positions"]
+        self.positions = [(p[0], p[1]) for p in state["positions"]]
         self.dir = state["dir"]
         self.green_apple_positions = set((pos[0], pos[1]) for pos in state["green_apples"])
         self.red_apple_positions = set((pos[0], pos[1]) for pos in state["red_apples"])
