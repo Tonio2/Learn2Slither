@@ -162,7 +162,8 @@ class Snake:
                 self.green_apple_positions.remove(new_head)
             else:
                 self.red_apple_positions.remove(new_head)
-            self._place_apples(1, scenari)
+            if not self._place_apples(1, scenari):
+                return False, scenari
 
         return True, scenari
 

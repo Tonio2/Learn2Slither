@@ -5,7 +5,7 @@ import random
 import numpy as np
 from importlib import import_module
 from snakeUI import UI
-from snake import Snake
+from snake import Snake, UP, LEFT, DOWN, RIGHT
 import shutil
 from logger import logger as logging
 
@@ -86,12 +86,13 @@ def train(ui_flag, q_table, state_to_index, update_q_table, model_name, print_le
                     break
 
             state = state_to_index(snake)
-            action = choose_action(q_table, state, epsilon)
+            action = int(choose_action(q_table, state, epsilon))
 
-            if action == 0:
-                snake.turn("left")
-            elif action == 1:
-                snake.turn("right")
+            # if action == 0:
+            #     snake.turn("left")
+            # elif action == 1:
+            #     snake.turn("right")
+            snake.set_dir(action)
 
             result, scenari = snake.move()
             q_table[state, action] += update_q_table(q_table, state, action, result, scenari, snake, alpha, gamma)
@@ -105,7 +106,7 @@ def train(ui_flag, q_table, state_to_index, update_q_table, model_name, print_le
         if ui_flag and input_type == "quit":
             break
 
-    print_learning_progress(q_table, verbose = "medium")
+    print_learning_progress(q_table, verbose = "full")
     np.save(f"{model_name}/Q_table.npy", q_table)
 
     if ui_flag:
@@ -127,7 +128,7 @@ def test(ui_flag, q_table, state_to_index, ngames, save, print_Q_table_entry):
         nmoves = 0
         result = True
 
-        while result and nmoves < 1000:
+        while result and nmoves < 100000:
             state = state_to_index(snake)
             # print_Q_table_entry(q_table, state)
             if ui_flag:
@@ -138,18 +139,19 @@ def test(ui_flag, q_table, state_to_index, ngames, save, print_Q_table_entry):
                     break
 
 
-            action = np.argmax(q_table[state])
+            action = int(np.argmax(q_table[state]))
 
-            if action == 0:
-                snake.turn("left")
-            elif action == 1:
-                snake.turn("right")
+            # if action == 0:
+            #     snake.turn("left")
+            # elif action == 1:
+            #     snake.turn("right")
+            snake.set_dir(action)
 
-            result, _ = snake.move()
+            result, scenari = snake.move()
 
             nmoves += 1
 
-        logging.info(f'Episode: {episode} Score: {snake.get_score()}')
+        logging.info(f'Episode: {episode} Score: {snake.get_score()} Death: {scenari}')
         scores.append(snake.get_score())
 
         if save:
@@ -158,7 +160,7 @@ def test(ui_flag, q_table, state_to_index, ngames, save, print_Q_table_entry):
         if ui_flag and input_type == "quit":
             break
 
-    logging.info(f'Average score: , {sum(scores) / ngames}')
+    logging.info(f'Average score: {sum(scores) / ngames}')
 
     if ui_flag:
         ui.quit()
@@ -196,7 +198,7 @@ def replay(ui_flag, filename, q_table, state_to_index, print_Q_table_entry):
     if ui_flag:
         ui.quit()
 
-DEFAULT = "v2"
+DEFAULT = "v3"
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("AI learning to play snake through Q-learning")
     subparsers = parser.add_subparsers(dest="command", help="Commande à exécuter")
