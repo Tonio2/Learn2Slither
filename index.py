@@ -106,6 +106,7 @@ def train(ui_flag, q_table, state_to_index, update_q_table, model_name, print_le
             break
 
     print_learning_progress(q_table, verbose = "medium")
+    np.save(f"{model_name}/Q_table.npy", q_table)
 
     if ui_flag:
         ui.quit()
