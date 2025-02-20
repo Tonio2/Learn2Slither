@@ -118,7 +118,7 @@ def train(ui_flag, q_table, state_to_index, update_q_table, model_name, print_le
     if ui_flag:
         ui.quit()
 
-def test(ui_flag, q_table, state_to_index, ngames, save, print_Q_table_entry, model_name):
+def test(ui_flag, q_table, state_to_index, ngames, save, print_Q_table_entry, model_name, console_mode):
     scores = []
 
     if ui_flag:
@@ -130,7 +130,7 @@ def test(ui_flag, q_table, state_to_index, ngames, save, print_Q_table_entry, mo
         os.makedirs("replays", exist_ok=True)
 
     for episode in range(ngames):
-        snake = Snake()
+        snake = Snake(console=console_mode)
         nmoves = 0
         result = True
 
@@ -222,6 +222,7 @@ if __name__ == "__main__":
     test_parser.add_argument("--games", default=1, type=int, help="Nombre de parties à jouer")
     test_parser.add_argument("--no-ui", action="store_true", help="Mode console")
     test_parser.add_argument("--save", action="store_true", help="Sauvegarder les parties")
+    test_parser.add_argument("--console", action="store_true", help="Afficher la vision dans la console")
 
     visualize_parser = subparsers.add_parser("visualize", help="Visualiser un modèle d'IA")
     visualize_parser.add_argument("--model", default=DEFAULT, help="Nom du modèle")
@@ -239,7 +240,7 @@ if __name__ == "__main__":
         if MODE == "train":
             train(not args.no_ui, q_table, state_to_index, update_q_table, args.model, print_learning_progress)
         if MODE == "test":
-            test(not args.no_ui, q_table, state_to_index, args.games, args.save, print_Q_table_entry, args.model)
+            test(not args.no_ui, q_table, state_to_index, args.games, args.save, print_Q_table_entry, args.model, args.console)
         if MODE == "visualize":
             print_learning_progress(q_table, verbose="medium")
 

@@ -1,4 +1,3 @@
-from snake import direction_after_turn, DIRECTIONS, UP, DOWN, LEFT, RIGHT
 import numpy as np
 from logger import logger as logging
 

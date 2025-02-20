@@ -21,9 +21,10 @@ def direction_after_turn(dir, turn):
 
 # First coordinate is the row, second is the column
 class Snake:
-    def __init__(self, board_size=BOARD_SIZE, initial_length=3, state=None):
+    def __init__(self, board_size=BOARD_SIZE, initial_length=3, state=None, console=False):
         self.board_size = board_size
         self.history = []
+        self.console = console
 
         if state:
             self._load_state(state)
@@ -40,6 +41,8 @@ class Snake:
             self._place_apples(1, "red")
 
         self._save_state()
+        if console:
+            self.log_console()
 
 
     def update_free_positions(self):
@@ -74,6 +77,28 @@ class Snake:
             "red_apples": list(self.red_apple_positions),
         }
         self.history.append(state)
+
+    def log_console(self):
+        readable_dir = ["UP", "RIGHT", "DOWN", "LEFT"]
+        print(readable_dir[self.dir])
+        print()
+        for row in range(-1, self.board_size + 1):
+            for col in range(-1, self.board_size + 1):
+                if row == self.positions[0][0] or col == self.positions[0][1]:
+                    if row == -1 or row == self.board_size or col == -1 or col == self.board_size:
+                        print("W", end="")
+                    elif (row, col) in self.positions:
+                        print("S", end="")
+                    elif (row, col) in self.green_apple_positions:
+                        print("G", end="")
+                    elif (row, col) in self.red_apple_positions:
+                        print("R", end="")
+                    else:
+                        print("0", end="")
+                else:
+                    print(" ", end="")
+            print()
+        print()
 
 
     def _get_free_random_position(self):
@@ -171,6 +196,8 @@ class Snake:
         res, scenari = self._make_move()
         logging.debug(f'Move: {self.dir} Result: {res} Scenari: {scenari}')
         self._save_state()
+        if self.console:
+            self.log_console()
         return res, scenari
 
     def get_positions(self):
