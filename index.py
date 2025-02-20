@@ -5,7 +5,7 @@ import random
 import numpy as np
 from importlib import import_module
 from snakeUI import UI
-from snake import Snake, UP, LEFT, DOWN, RIGHT
+from snake import Snake
 import shutil
 from logger import logger as logging
 
@@ -63,6 +63,15 @@ def choose_action(q_table, state, epsilon):
                 return i
         return np.argmax(q_table[state])
 
+def apply_action(snake, type, action):
+    if type == "turn":
+        if action == 0:
+            snake.turn("left")
+        elif action == 1:
+            snake.turn("right")
+    elif type == "dir":
+        snake.set_dir(action)
+
 def train(ui_flag, q_table, state_to_index, update_q_table, model_name, print_learning_progress):
     gamma = 0.9
     alpha = 0.1
@@ -88,11 +97,8 @@ def train(ui_flag, q_table, state_to_index, update_q_table, model_name, print_le
             state = state_to_index(snake)
             action = int(choose_action(q_table, state, epsilon))
 
-            # if action == 0:
-            #     snake.turn("left")
-            # elif action == 1:
-            #     snake.turn("right")
-            snake.set_dir(action)
+            action_type = "dir" if model_name == "v3" else "turn"
+            apply_action(snake, action_type, action)
 
             result, scenari = snake.move()
             q_table[state, action] += update_q_table(q_table, state, action, result, scenari, snake, alpha, gamma)
@@ -112,7 +118,7 @@ def train(ui_flag, q_table, state_to_index, update_q_table, model_name, print_le
     if ui_flag:
         ui.quit()
 
-def test(ui_flag, q_table, state_to_index, ngames, save, print_Q_table_entry):
+def test(ui_flag, q_table, state_to_index, ngames, save, print_Q_table_entry, model_name):
     scores = []
 
     if ui_flag:
@@ -141,11 +147,8 @@ def test(ui_flag, q_table, state_to_index, ngames, save, print_Q_table_entry):
 
             action = int(np.argmax(q_table[state]))
 
-            # if action == 0:
-            #     snake.turn("left")
-            # elif action == 1:
-            #     snake.turn("right")
-            snake.set_dir(action)
+            action_type = "dir" if model_name == "v3" else "turn"
+            apply_action(snake, action_type, action)
 
             result, scenari = snake.move()
 
@@ -236,7 +239,7 @@ if __name__ == "__main__":
         if MODE == "train":
             train(not args.no_ui, q_table, state_to_index, update_q_table, args.model, print_learning_progress)
         if MODE == "test":
-            test(not args.no_ui, q_table, state_to_index, args.games, args.save, print_Q_table_entry)
+            test(not args.no_ui, q_table, state_to_index, args.games, args.save, print_Q_table_entry, args.model)
         if MODE == "visualize":
             print_learning_progress(q_table, verbose="medium")
 

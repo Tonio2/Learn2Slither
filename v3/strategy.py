@@ -92,4 +92,4 @@ def print_learning_progress(q_table, verbose = "minimal"):
 
 
     logging.info(f"Learning progress (state): {visited_states}/{state_count} ({(visited_states/state_count * 100):.2f} %)")
-    logging.info(f"Learning progress (actions): {taken_actions}/{state_count * 3} ({(taken_actions/(state_count * 3) * 100):.2f} %)")
+    logging.info(f"Learning progress (actions): {taken_actions}/{state_count * n_actions} ({(taken_actions/(state_count * 3) * 100):.2f} %)")
