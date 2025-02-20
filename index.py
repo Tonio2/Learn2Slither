@@ -15,13 +15,14 @@ def load(model_name, train=False):
     state_to_index = strategy_module.state_to_index
     update_q_table = strategy_module.update_Q_table
     print_Q_table_entry = strategy_module.print_Q_table_entry
+    print_learning_progress = strategy_module.print_learning_progress
 
     if train:
         q_table = strategy_module.Q_table
     else:
         model_path = os.path.join(model_name, "Q_table.npy")
         q_table = np.load(model_path)
-    return q_table, state_to_index, update_q_table, print_Q_table_entry
+    return q_table, state_to_index, update_q_table, print_Q_table_entry, print_learning_progress
 
 def play():
     ui = UI()
@@ -54,7 +55,7 @@ def play():
     ui.quit()
 
 
-def train(ui_flag, q_table, state_to_index, update_q_table, model_name):
+def train(ui_flag, q_table, state_to_index, update_q_table, model_name, print_learning_progress):
     gamma = 0.9
     alpha = 0.1
     epsilon = 1.0
@@ -94,10 +95,12 @@ def train(ui_flag, q_table, state_to_index, update_q_table, model_name):
 
         score = snake.get_score()
         logging.info(f"Episode: {episode} Score: {score} Epsilon: {epsilon:.4f}")
-        epsilon *= epsilon_decay
+        epsilon = max(0.1, epsilon * epsilon_decay)
 
         if ui_flag and input_type == "quit":
             break
+
+    print_learning_progress(q_table, verbose = "medium")
 
     if ui_flag:
         ui.quit()
@@ -120,7 +123,7 @@ def test(ui_flag, q_table, state_to_index, ngames, save, print_Q_table_entry):
 
         while result and nmoves < 1000:
             state = state_to_index(snake)
-            print_Q_table_entry(q_table, state)
+            # print_Q_table_entry(q_table, state)
             if ui_flag:
                 ui.render(snake)
                 input_type, _ = ui.get_spectator_input()
@@ -187,7 +190,7 @@ def replay(ui_flag, filename, q_table, state_to_index, print_Q_table_entry):
     if ui_flag:
         ui.quit()
 
-
+DEFAULT = "v2"
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("AI learning to play snake through Q-learning")
     subparsers = parser.add_subparsers(dest="command", help="Commande à exécuter")
@@ -196,18 +199,21 @@ if __name__ == "__main__":
 
     replay_parser = subparsers.add_parser("replay", help="Rejouer une partie")
     replay_parser.add_argument("filename", help="Fichier de replay")
-    replay_parser.add_argument("--model", default="v2", help="Modèle d'IA")
+    replay_parser.add_argument("--model", default=DEFAULT, help="Modèle d'IA")
     replay_parser.add_argument("--no-ui", action="store_true", help="Mode console")
 
     train_parser = subparsers.add_parser("train", help="Entraîner un modèle d'IA")
-    train_parser.add_argument("--model", default="v2", help="Nom du modèle")
+    train_parser.add_argument("--model", default=DEFAULT, help="Nom du modèle")
     train_parser.add_argument("--no-ui", action="store_true", help="Mode console")
 
     test_parser = subparsers.add_parser("test", help="Tester un modèle d'IA")
-    test_parser.add_argument("--model", default="v2", help="Nom du modèle")
+    test_parser.add_argument("--model", default=DEFAULT, help="Nom du modèle")
     test_parser.add_argument("--games", default=1, type=int, help="Nombre de parties à jouer")
     test_parser.add_argument("--no-ui", action="store_true", help="Mode console")
     test_parser.add_argument("--save", action="store_true", help="Sauvegarder les parties")
+
+    visualize_parser = subparsers.add_parser("visualize", help="Visualiser un modèle d'IA")
+    visualize_parser.add_argument("--model", default=DEFAULT, help="Nom du modèle")
 
     args = parser.parse_args()
 
@@ -216,11 +222,13 @@ if __name__ == "__main__":
     if MODE == "play":
         play()
     else:
-        q_table, state_to_index, update_q_table, print_Q_table_entry = load(args.model, MODE == "train")
+        q_table, state_to_index, update_q_table, print_Q_table_entry, print_learning_progress = load(args.model, MODE == "train")
         if MODE == "replay":
             replay(not args.no_ui, args.filename, q_table, state_to_index, print_Q_table_entry)
         if MODE == "train":
-            train(not args.no_ui, q_table, state_to_index, update_q_table, args.model)
+            train(not args.no_ui, q_table, state_to_index, update_q_table, args.model, print_learning_progress)
         if MODE == "test":
             test(not args.no_ui, q_table, state_to_index, args.games, args.save, print_Q_table_entry)
+        if MODE == "visualize":
+            print_learning_progress(q_table, verbose="medium")
 
