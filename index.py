@@ -54,6 +54,14 @@ def play():
 
     ui.quit()
 
+def choose_action(q_table, state, epsilon):
+    if random.uniform(0, 1) < epsilon:
+        return random.randint(0, 2)
+    else:
+        for i in range(len(q_table[state])):
+            if q_table[state][i] == 0:
+                return i
+        return np.argmax(q_table[state])
 
 def train(ui_flag, q_table, state_to_index, update_q_table, model_name, print_learning_progress):
     gamma = 0.9
@@ -78,10 +86,7 @@ def train(ui_flag, q_table, state_to_index, update_q_table, model_name, print_le
                     break
 
             state = state_to_index(snake)
-            if random.uniform(0, 1) < epsilon:
-                action = random.randint(0, 2)
-            else:
-                action = np.argmax(q_table[state])
+            action = choose_action(q_table, state, epsilon)
 
             if action == 0:
                 snake.turn("left")
@@ -95,7 +100,7 @@ def train(ui_flag, q_table, state_to_index, update_q_table, model_name, print_le
 
         score = snake.get_score()
         logging.info(f"Episode: {episode} Score: {score} Epsilon: {epsilon:.4f}")
-        epsilon = max(0.1, epsilon * epsilon_decay)
+        epsilon *= epsilon_decay
 
         if ui_flag and input_type == "quit":
             break
