@@ -53,6 +53,7 @@ def play():
 
     ui.quit()
 
+
 def train(ui_flag, q_table, state_to_index, update_q_table, model_name):
     gamma = 0.9
     alpha = 0.1
@@ -72,12 +73,10 @@ def train(ui_flag, q_table, state_to_index, update_q_table, model_name):
             if ui_flag:
                 ui.render(snake)
                 input_type, _ = ui.get_spectator_input()
-
                 if input_type == "quit":
                     break
 
             state = state_to_index(snake)
-
             if random.uniform(0, 1) < epsilon:
                 action = random.randint(0, 2)
             else:
@@ -87,21 +86,21 @@ def train(ui_flag, q_table, state_to_index, update_q_table, model_name):
                 snake.turn("left")
             elif action == 1:
                 snake.turn("right")
+
             result, scenari = snake.move()
             q_table[state, action] += update_q_table(q_table, state, action, result, scenari, snake, alpha, gamma)
 
             nmoves += 1
 
-        logging.info(f"Episode: {episode} Score: {snake.get_score()}")
+        score = snake.get_score()
+        logging.info(f"Episode: {episode} Score: {score} Epsilon: {epsilon:.4f}")
         epsilon *= epsilon_decay
 
         if ui_flag and input_type == "quit":
-                    break
+            break
 
     if ui_flag:
         ui.quit()
-    np.save(f"{model_name}/Q_table.npy", q_table)
-
 
 def test(ui_flag, q_table, state_to_index, ngames, save, print_Q_table_entry):
     scores = []

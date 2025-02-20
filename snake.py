@@ -23,11 +23,34 @@ def direction_after_turn(dir, turn):
 class Snake:
     def __init__(self, board_size=BOARD_SIZE, initial_length=3, state=None):
         self.board_size = board_size
+        self.history = []
 
+        if state:
+            self._load_state(state)
+            self.update_free_positions()
+        else:
+            self.free_positions = set(
+                (x, y) for x in range(self.board_size) for y in range(self.board_size)
+            )
+            self.init_snake_pos(initial_length)
+            self.green_apple_positions = set()
+            self.red_apple_positions = set()
+            self.free_positions -= set(self.positions)
+            self._place_apples(2, "green")
+            self._place_apples(1, "red")
+
+        self._save_state()
+
+
+    def update_free_positions(self):
         self.free_positions = set(
             (x, y) for x in range(self.board_size) for y in range(self.board_size)
         )
+        self.free_positions -= set(self.positions)
+        self.free_positions -= self.green_apple_positions
+        self.free_positions -= self.red_apple_positions
 
+    def init_snake_pos(self, initial_length=3):
         pos_ok = False
         while not pos_ok:
             pos = self._get_free_random_position()
@@ -36,21 +59,6 @@ class Snake:
             pos_ok = all(self.is_legal(p) for p in self.positions)
             next_pos = self.next_pos(self.positions[0], self.dir)
             pos_ok = pos_ok and self.is_legal(next_pos)
-
-
-        self.free_positions -= set(self.positions)
-
-        self.green_apple_positions = set()
-        self.red_apple_positions = set()
-
-        self.history = []
-
-        self._place_apples(2, "green")
-        self._place_apples(1, "red")
-        self._save_state()
-
-        if state:
-            self._load_state(state)
 
     def _load_state(self, state):
         self.positions = [(p[0], p[1]) for p in state["positions"]]
@@ -74,6 +82,7 @@ class Snake:
         return random.choice(list(self.free_positions))
 
     def _place_apples(self, count, color):
+        placed = False
         for _ in range(count):
             pos = self._get_free_random_position()
             if pos:
@@ -83,8 +92,13 @@ class Snake:
                     self.red_apple_positions.add(pos)
 
                 self.free_positions.remove(pos)
+                placed = True
+        return placed
+
 
     def set_dir(self, command):
+        if command not in [UP, RIGHT, DOWN, LEFT]:
+            raise ValueError(f"Direction invalide : {command}")
         if DIRECTIONS[command] != (-DIRECTIONS[self.dir][0], -DIRECTIONS[self.dir][1]):
             self.dir = command
 
@@ -100,51 +114,55 @@ class Snake:
         self.free_positions.discard(head)
 
     def next_pos(self, pos, dir):
+        if dir not in [UP, RIGHT, DOWN, LEFT]:
+            raise ValueError(f"Direction invalide : {dir}")
         return (pos[0] + DIRECTIONS[dir][0], pos[1] + DIRECTIONS[dir][1])
 
     def is_legal(self, pos):
         return pos[0] >= 0 and pos[0] < self.board_size and pos[1] >= 0 and pos[1] < self.board_size
 
+    def tile_type(self, pos):
+        if not self.is_legal(pos):
+            return "wall"
+        if pos in self.positions:
+            return "snake"
+        if pos in self.green_apple_positions:
+            return "green"
+        if pos in self.red_apple_positions:
+            return "red"
+        return "empty"
+
+
     def _make_move(self):
-        head_x, head_y = self.positions[0]
-        new_head = self.next_pos((head_x, head_y), self.dir)
-        scenari = "default"
+        head = self.positions[0]
+        new_head = self.next_pos(head, self.dir)
 
-        logging.debug(f"New head: {new_head}")
+        scenari = self.tile_type(new_head)
 
-        if (
-            new_head in self.positions
-            or new_head[0] < 0 or new_head[0] >= self.board_size
-            or new_head[1] < 0 or new_head[1] >= self.board_size
-        ):
-            logging.debug(f"Eats its body: {new_head in self.positions}")
-            logging.debug(f"Hits wall: {new_head[0] < 0 or new_head[0] >= self.board_size or new_head[1] < 0 or new_head[1] >= self.board_size}")
-            return False, scenari # Collision detected
-
-        if new_head in self.green_apple_positions:
-            scenari = "green"
-        elif new_head in self.red_apple_positions:
-            scenari = "red"
+        if scenari == "wall":
+            return False, scenari
+        if scenari == "snake":
+            if new_head == self.positions[-1]:
+                scenari = "empty"
+            else:
+                return False, scenari
+        if scenari == "red" and len(self.positions) == 1:
+            return False, scenari
 
         # Update snake
         self._insert_head(new_head)
-        if scenari == "default":
+        if scenari != "green":
             self._pop_tail()
-        elif scenari == "red":
-            if len(self.positions) > 2:
-                self._pop_tail()
-                self._pop_tail()
-            else:
-                logging.debug("Eats red apple but not enough length")
-                return False, scenari
+        if scenari == "red":
+            self._pop_tail()
 
         # Update apples
-        if scenari == "green":
-            self.green_apple_positions.remove(new_head)
-            self._place_apples(1, "green")
-        elif scenari == "red":
-            self.red_apple_positions.remove(new_head)
-            self._place_apples(1, "red")
+        if scenari in ["green", "red"]:
+            if scenari == "green":
+                self.green_apple_positions.remove(new_head)
+            else:
+                self.red_apple_positions.remove(new_head)
+            self._place_apples(1, scenari)
 
         return True, scenari
 
