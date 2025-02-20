@@ -143,17 +143,21 @@ def update_Q_table(Q_table, state, action, res, scenari, snake, alpha=0.1, gamma
         elif scenari == "green":
             reward = 80
 
-    is_close_to_himself = False
-    dirs = [direction_after_turn(snake.dir, "left"), direction_after_turn(snake.dir, "right"), snake.dir]
-    logging.debug("Dirs: {dirs}")
-    tiles = [snake.next_pos(snake.positions[0], dir) for dir in dirs]
+    # is_close_to_himself = False
+    # dirs = [direction_after_turn(snake.dir, "left"), direction_after_turn(snake.dir, "right"), snake.dir]
+    # logging.debug("Dirs: {dirs}")
+    # tiles = [snake.next_pos(snake.positions[0], dir) for dir in dirs]
 
-    for tile in tiles:
-        if tile in snake.positions:
-            is_close_to_himself = True
+    # for tile in tiles:
+    #     if tile in snake.positions:
+    #         is_close_to_himself = True
 
-    if is_close_to_himself:
-        reward += 30
+    # if is_close_to_himself:
+    #     reward += 20
+
+    if snake.dir != update_Q_table.previous_dir:
+        reward += 10
+    update_Q_table.previous_dir = snake.dir
 
     if res == False:
         return alpha * (reward - Q_table[state][action])
@@ -161,27 +165,13 @@ def update_Q_table(Q_table, state, action, res, scenari, snake, alpha=0.1, gamma
         next_state = state_to_index(snake)
         return alpha * (reward + gamma * np.max(Q_table[next_state]) - Q_table[state, action])
 
+update_Q_table.previous_dir = None
+
 
 NSTATES = 224  # 8 (Danger) * 4 (Red Apple) * 7 (Green Apple)
 n_actions = 3  # Left, Right, Forward
 
 Q_table = np.zeros((NSTATES, n_actions))
-
-impossible_count = 0
-
-
-
-
-# Iterate over all possible states
-for state in range(NSTATES):
-    impossible_state = False
-    # Extract the components of the state from the index
-
-
-
-
-    if impossible_state:
-        impossible_count += 1
 
 def index_to_state(index):
     DANGER_LABELS = ["Safe", "Left", "Right", "Left+Right", "Center", "Left+Center", "Right+Center", "All"]

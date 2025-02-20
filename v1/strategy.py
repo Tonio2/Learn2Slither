@@ -116,18 +116,11 @@ def state_to_index(snake):
     return danger * (4 * 7) + red_apple * 7 + green_apple
 
 def print_Q_table_entry(Q_table, index):
-    """Prints the state representation for a given index."""
-    DANGER_LABELS = ["Safe", "Left", "Right", "Left+Right", "Center", "Left+Center", "Right+Center", "All"]
-    RED_APPLE_LABELS = ["No Red", "Left", "Right", "Center"]
-    GREEN_APPLE_LABELS = ["No Green", "Left", "Right", "Left+Right", "Center", "Left+Center", "Right+Center"]
+    danger, red, green = index_to_state(index)
 
-    danger = index // (4 * 7)
-    red = (index % (4 * 7)) // 7
-    green = (index % 7)
-
-    state_label = f"{DANGER_LABELS[danger]:<6} | {RED_APPLE_LABELS[red]:<7} | {GREEN_APPLE_LABELS[green]:<12}"
+    state_label = f"{danger:<6} | {red:<7} | {green:<12}"
     row = " | ".join(f"{Q_table[index, j]:.2f}" for j in range(n_actions))
-    print(f"{state_label}: {row}")
+    logging.info(f"{state_label}: {row}")
 
 def print_Q_table(Q_table):
     """Prints the Q-table in a readable format without affecting performance."""
@@ -168,3 +161,79 @@ Q_table = np.zeros((NSTATES, n_actions))
 
 # Apres corrections des bugs on constate que manger une pomme verte n'est pas assez rewardé
 # Pas assez de punitions pour rouge
+
+def index_to_state(index):
+    DANGER_LABELS = ["Safe", "Left", "Right", "Left+Right", "Center", "Left+Center", "Right+Center", "All"]
+    RED_APPLE_LABELS = ["No Red", "Left", "Right", "Center"]
+    GREEN_APPLE_LABELS = ["No Green", "Left", "Right", "Left+Right", "Center", "Left+Center", "Right+Center"]
+
+    danger = index // (4 * 7)
+    red_apple = (index % (4 * 7)) // 7
+    green_apple = (index % 7)
+
+    danger_label = DANGER_LABELS[danger]
+    red_label = RED_APPLE_LABELS[red_apple]
+    green_label = GREEN_APPLE_LABELS[green_apple]
+
+    return danger_label, red_label, green_label
+
+def is_state_possible(index):
+    danger, red, green = index_to_state(index)
+
+    danger_left = "Left" in danger or danger == "All"
+    red_left = red == "Left"
+    green_left = "Left" in green
+
+    danger_right = "Right" in danger or danger == "All"
+    red_right = red == "Right"
+    green_right = "Right" in green
+
+    danger_center = "Center" in danger or danger == "All"
+    red_center = red == "Center"
+    green_center = "Center" in green
+
+    # Rule 1: "Danger Left" should not coexist with "Red Apple Left" or "Green Apple Left"
+    if (danger_left and (red_left or green_left)):
+        return False
+
+    # Rule 2: "Danger Right" should not coexist with "Red Apple Right" or "Green Apple Right"
+    if (danger_right and (red_right or green_right)):
+        return False
+
+    # Rule 3: "Danger Center" should not coexist with "Red Apple Center" or "Green Apple Center"
+    if (danger_center and (red_center or green_center)):
+        return False
+
+    # Rule 4: "Red Apple Left" should not coexist with "Green Apple Left"
+    if red_left and green_left:
+        return False
+
+    # Rule 5: "Red Apple Right" should not coexist with "Green Apple Right"
+    if red_right and green_right:
+        return False
+
+    # Rule 6: "Red Apple Center" should not coexist with "Green Apple Center"
+    if red_center and green_center:
+        return False
+
+    return True
+
+def print_learning_progress(q_table, verbose = "minimal"):
+    visited_states = 0
+    taken_actions = 0
+    state_count = 0
+    for state in range(NSTATES):
+        if is_state_possible(state):
+            state_count += 1
+            taken_actions += np.count_nonzero(q_table[state])
+            if np.any(q_table[state]):
+                visited_states += 1
+
+            if verbose == "full":
+                print_Q_table_entry(q_table, state)
+            if verbose == "medium" and np.any(q_table[state] == 0):
+                print_Q_table_entry(q_table, state)
+
+
+    logging.info(f"Learning progress (state): {visited_states}/{state_count} ({(visited_states/state_count * 100):.2f} %)")
+    logging.info(f"Learning progress (actions): {taken_actions}/{state_count * 3} ({(taken_actions/(state_count * 3) * 100):.2f} %)")
